@@ -95,7 +95,7 @@ def main():
 	Imagen_maloso.set_colorkey(transparente)
 	
 	Imagen_heart = pygame.image.load("heart.png")
-	transparente = Imagen_heart.get_at((0, 0))
+	transparente = Imagen_heart.get_at((2, 2))
 	Imagen_heart.set_colorkey(transparente)
 	
 	contador = time.time()
@@ -113,7 +113,7 @@ def main():
 	obj_est = tipo = tipo_mov = salto = malo = corazon= 0
 	
 	#Pantalla de introduccion de duracion 10 segundos
-	while segundos >= 8:
+	while segundos >= 0:
 		
 		contador_new = time.time()
 		if contador_new - contador > 1.0:
@@ -132,7 +132,7 @@ def main():
 	Musica_intro.stop()
 	Musica_ambiente.play(-1)
 	#Pantalla del juego de duracion 10 segundos
-	while segundos > 8:
+	while segundos > 0:
 	
 		contador_new = time.time()
 		print str(contador_new - contador)
@@ -244,8 +244,14 @@ def main():
 		incrementoY = saltar(MiMonigotillo,Suelo1,Suelo2,Suelo3)
 				
 		if evento.type == pygame.KEYUP:
-			incrementoX = 0
-			tipo_mov = 0
+			if evento.key == pygame.K_RIGHT:
+				incrementoX = 0
+				tipo_mov = 0
+			elif evento.key == pygame.K_LEFT:
+				incrementoX = 0
+				tipo_mov = 0
+			
+			
 
 		coordX = coordX + incrementoX
 		coordY = coordY + incrementoY
