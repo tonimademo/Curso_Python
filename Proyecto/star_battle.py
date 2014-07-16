@@ -46,11 +46,10 @@ def main():
 
 	# Cargo las letras que informaran del tiempo y de las vidas y se renderizan
 	Tiempo = Fuente.render("Tiempo: ", 0, (255,255,255))
-	segundos = 100
 	Intro_nomb = Fuente.render("Introduzca su nombre: ", 0, (255,255,255))
 	
 	Fondo = pygame.image.load("escenarioSB.png")
-	Fondo_Negro = pygame.image.load("ranking.png")
+	Fondo_Negro = pygame.image.load("ranking_PR.png")
 	
 	#cargo las imagenes de los sprites de los pjś
 	Nave_im = pygame.image.load("nave.png")
@@ -65,6 +64,10 @@ def main():
 	transparente = Imagen_disparo.get_at((1, 1))
 	Imagen_disparo.set_colorkey(transparente)
 	
+	Imagen_explosion = pygame.image.load("explosion.png")
+	transparente = Imagen_disparo.get_at((1, 1))
+	Imagen_disparo.set_colorkey(transparente)
+	
 	puntuacion = 0
 	Mensaje_puntuacion= Fuente.render("Puntos: ", 0, (255,255,255))
 	Puntuacion = Fuente.render(str(puntuacion), 0, (255,255,255))
@@ -73,8 +76,7 @@ def main():
 	coordX = 300
 	coordY = 160
 	vivo = 1
-	disparos =[]
-
+	
 	#creo el sprite del pj principal
 	MiNave = Nave((coordX, coordY), Nave_im)
 	incrementoX = 0
@@ -84,29 +86,12 @@ def main():
 	incrementoX_est = -3
 	obj_est = tipo = tipo_mov = salto = malo = corazon= 0
 	
-	'''
-	#Pantalla de introduccion de duracion 10 segundos
-	while segundos >= 0:
-		
-		contador_new = time.time()
-		if contador_new - contador > 1.0:
-			segundos = segundos -1
-			contador = contador_new	
-			
-		Ventana.blit(Fondo_Negro, (0, 0))
-		Ventana.blit(Historia_1, (40, 45))
-		Ventana.blit(Historia_2, (40, 95))
-		Ventana.blit(Historia_3, (40, 145))
-		pygame.display.flip()
-		
-		
-	contador = time.time()
-	segundos = 10
-	Musica_intro.stop()
-	Musica_ambiente.play(-1)
-	#Pantalla del juego de duracion 10 segundos
-	'''
+	#Lista de las explosiones
+	explosiones = []
+	#lista de los disparos
+	disparos =[]
 
+	
 	while vivo:
 	
 		Ventana.blit(Fondo, (0, 0))
@@ -116,19 +101,17 @@ def main():
 		Ventana.blit(MiNave.image, MiNave.rect)
 		for i in range(len(disparos)):
 			Ventana.blit(disparos[i].image, disparos[i].rect)
+		for j in range(len(explosiones)):
+			Ventana.blit(explosiones[j].image, explosiones[j].rect)
 		
 		#generador de maloso y de corazon
 		if obj_est == 0:
 			prob = random.random()
 			corazon = malo = 0
 			coordXini_est = 845
-			coordYini_est = random.randint(0,500)
-			#if prob > 0.5:
+			coordYini_est = random.randint(30,470)
 			malo = 1
-			Objt_est = Alien((coordXini_est, coordYini_est), Imagen_alien)	
-			#else:
-			#corazon = 1
-			#Objt_est = Heart((coordXini_est, coordYini_est), Imagen_heart)
+			Objt_est = Alien(coordXini_est, coordYini_est, Imagen_alien)	
 			obj_est = 1
 			
 		else:
@@ -182,7 +165,7 @@ def main():
 				tipo_mov = 0
 			
 		#aplico el movimiento de la nave controlando que no se salga del mapa
-		print str(coordY)
+		
 		if coordX <= 0 and incrementoX > 0:
 			coordX = coordX + incrementoX
 		elif coordX >= 849 and incrementoX < 0:
@@ -193,50 +176,56 @@ def main():
 			coordX = coordX
 			
 		if coordY <= 0 and incrementoY > 0:
-			print "se sale por arriba"
 			coordY = coordY + incrementoY
 		elif coordY >= 507 and incrementoY < 0:
-			print "se sale por abajo"
 			coordY = coordY + incrementoY
 		elif (coordY > 0 and coordY < 507) and incrementoY != 0:	
-			print "dentro"	
 			coordY = coordY + incrementoY
 		else:
-			print "quieto"
 			coordY = coordY
 			
-		#lista de los posibles disparos que eliminare
-		disparo_out = []
 		Coordenadas_nave = (coordX, coordY)
 		#Actualizo la posicion del pj principal
 		MiNave.update(Coordenadas_nave)
 		#Si choco contra un alien, muero
 		if colision_obj_est (MiNave, Objt_est) == 0:
-			print "colision"
 			vivo = 0
+		#lista de los posibles disparos y explosiones que eliminare
+		disparo_out = []
+		explosiones_out = []
 		
 		#Actualizo los disparos si los hay
-		for j in range(len(disparos)):
-			disparos[j].coordX = disparos[j].coordX + 5
-			Coordenadas_disparo = (disparos[j].coordX, disparos[j].coordY)
-			disparos[j].update(Coordenadas_disparo)
+		for k in range(len(disparos)):
+			disparos[k].coordX = disparos[k].coordX + 5
+			Coordenadas_disparo = (disparos[k].coordX, disparos[k].coordY)
+			disparos[k].update(Coordenadas_disparo)
 			#Si ha habido una colision, elimino al alien y el disparo y actualizo la puntuacion
-			if colision_obj_est (disparos[j], Objt_est) == 0:
-				disparo_out.append(j)
+			if colision_obj_est (disparos[k], Objt_est) == 0:
+				disparo_out.append(k)
 				puntuacion = puntuacion + 1
 				Puntuacion = Fuente.render(str(puntuacion), 0, (255,255,255))
 				obj_est = 0
+				Impacto = Explosion(Objt_est.coordX, Objt_est.coordY, Imagen_explosion)	
+				explosiones.append(Impacto)
 			#Si se ha salido del mapa
-			elif disparos[j].coordX > 849:
-				disparo_out.append(j)
+			elif disparos[k].coordX > 849:
+				disparo_out.append(k)
+		for l in range(len(explosiones)):
+			if explosiones[l].vivo == 1:
+				explosiones[l].update()
+			else:
+				explosiones_out.append(l)
 		#elimino los disparos que ha impactado o se han salido del mapa
 		for h in range(len(disparo_out)):
-			del disparos[disparo_out[h]]		
+			del disparos[disparo_out[h]]	
+		#elimino las explosiones que ya se han producido
+		for m in range(len(explosiones_out)):
+			del explosiones[explosiones_out[m]]			
 		#si hay algun pj estatico (sin que se mueva por teclado) actualizo su posicion y si ha llegado al final de la pantalla, no lo pinto mas
 		if obj_est == 1:
-			coordXini_est = coordXini_est + incrementoX_est
+			Objt_est.coordX = Objt_est.coordX + incrementoX_est
 			if coordXini_est > 0:
-				Coordenadas_est = (coordXini_est,coordYini_est )
+				Coordenadas_est = (Objt_est.coordX,coordYini_est )
 				Objt_est.update(Coordenadas_est)
 			else:
 				obj_est = 0
@@ -291,12 +280,14 @@ def main():
 	
 class Alien(pygame.sprite.Sprite):
 
-    def __init__(self, coordenadas, imagen):
+    def __init__(self, coordX, coordY, imagen):
 		pygame.sprite.Sprite.__init__(self)
 		
 		self.image = imagen 
+		self.coordX = coordX
+		self.coordY = coordY
 		self.rect = self.image.get_rect()
-		self.rect.center = coordenadas
+		self.rect.center = (coordX, coordY)
 
 
     def update(self, nuevas_coordenadas):
@@ -314,7 +305,7 @@ class Nave(pygame.sprite.Sprite):
 		self.arrayAnim=[]
 		
 		while a < 4:
-			self.arrayAnim.append(self.ImgCompleta.subsurface((0,c*71,70,70)))	
+			self.arrayAnim.append(self.ImgCompleta.subsurface((0,c*72,71,72)))	
 			c=c+1
 			a=a+1
 			
@@ -329,7 +320,7 @@ class Nave(pygame.sprite.Sprite):
 			self.rect.center = nuevas_coordenadas
 			if self.actualizado + 100 < pygame.time.get_ticks():
 				self.anim= self.anim + 1
-				if self.anim > 1:
+				if self.anim > 3:
 					self.anim= 0
 				self.image = self.arrayAnim[self.anim]
 				#self.mask = pygame.mask.from_surface(self.image.subsurface((0,45,31,4)))
@@ -349,7 +340,7 @@ class Disparo(pygame.sprite.Sprite):
 		
 		
 		while a < 3:
-			self.arrayAnim.append(self.ImgCompleta.subsurface((c*21,0,21,21)))	
+			self.arrayAnim.append(self.ImgCompleta.subsurface((c*22,0,21,21)))	
 			c=c+1
 			a=a+1
 			
@@ -364,10 +355,46 @@ class Disparo(pygame.sprite.Sprite):
 			self.rect.center = nuevas_coordenadas
 			if self.actualizado + 100 < pygame.time.get_ticks():
 				self.anim= self.anim + 1
-				if self.anim > 1:
+				if self.anim > 2:
 					self.anim= 0
 				self.image = self.arrayAnim[self.anim]
-				#self.mask = pygame.mask.from_surface(self.image.subsurface((0,45,31,4)))
+				self.actualizado= pygame.time.get_ticks()
+
+class Explosion(pygame.sprite.Sprite):
+
+    def __init__(self, coordX, coordY, imagen):
+		pygame.sprite.Sprite.__init__(self)
+
+		self.ImgCompleta = imagen
+		self.coordX = coordX
+		self.coordY = coordY
+		self.vivo = 1
+		a=0
+		b=0
+		self.arrayAnim=[]
+		
+		while a < 3:
+			while b < 6:
+				self.arrayAnim.append(self.ImgCompleta.subsurface((b*43,a*44,41,44)))	
+				b=b+1
+			b=0
+			a=a+1
+			
+		self.anim= 0
+		self.actualizado = pygame.time.get_ticks()
+		self.image = self.arrayAnim[self.anim]
+		self.rect = self.image.get_rect()
+		self.rect.center = (self.coordX, self.coordY)
+
+
+    def update(self):
+			if self.actualizado + 100 < pygame.time.get_ticks():
+				if self.anim >= 17:
+					self.vivo= 0
+					self.anim = 0
+				else:
+					self.anim= self.anim + 1
+				self.image = self.arrayAnim[self.anim]
 				self.actualizado= pygame.time.get_ticks()
 			
 main()
